@@ -28,15 +28,16 @@ func downloadImage(url, fileName string) error {
 	}
 	defer response.Body.Close()
 
-	file, err := os.Create(fileName)
+	file, err := os.Create("c:\\Users\\Alonzo\\Programming\\DisArchive\\DisArchive\\images\\" + fileName)
 	defer file.Close()
 
 	if err != nil {
 		return err
 	}
 
-	_, err = io.Copy(file, response.Body)
-	log.Println("saved file" + fileName)
+	x, err := io.Copy(file, response.Body)
+	log.Println(x)
+	log.Println("saved file " + fileName)
 	if err != nil {
 		return err
 	}
@@ -46,24 +47,27 @@ func downloadImage(url, fileName string) error {
 
 func archive(s *discordgo.Session) {
 	//810621872844570645
-	message, err := s.ChannelMessages("396535726855946240", 10, "816035932687564830", "", "")
+	message, err := s.ChannelMessages("396535726855946240", 50, "816035932687564830", "", "")
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	//c:\Users\Alonzo\Programming\DisArchive\DisArchive\images
 	//var messageID []int
 	for _, content := range message {
 		if len(content.Attachments) != 0 {
 			for _, foo := range content.Attachments {
-				err := downloadImage(foo.URL, foo.Filename)
+				fileType := strings.SplitAfter(foo.Filename, ".")
+				err := downloadImage(foo.URL, foo.ID+"."+fileType[1])
 				if err != nil {
 					log.Println(err)
 				}
 			}
-			//log.Println(reflect.TypeOf(content.Attachments))
+
 		}
 
 	}
+	log.Println("done")
 }
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, "!start") {
