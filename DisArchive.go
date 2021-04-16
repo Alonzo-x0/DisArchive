@@ -37,7 +37,7 @@ func downloadImage(url, fileName string) error {
 
 	x, err := io.Copy(file, response.Body)
 	log.Println(x)
-	log.Println("saved file " + fileName)
+	log.Println("File created: " + fileName)
 	if err != nil {
 		return err
 	}
@@ -58,10 +58,15 @@ func archive(s *discordgo.Session) {
 		if len(content.Attachments) != 0 {
 			for _, foo := range content.Attachments {
 				fileType := strings.SplitAfter(foo.Filename, ".")
-				err := downloadImage(foo.URL, foo.ID+"."+fileType[1])
-				if err != nil {
-					log.Println(err)
+				if _, err := os.Stat("c:\\Users\\Alonzo\\Programming\\DisArchive\\DisArchive\\images\\" + foo.ID + "." + fileType[1]); os.IsNotExist(err) {
+					log.Println("Creating file")
+					err := downloadImage(foo.URL, foo.ID+"."+fileType[1])
+					if err != nil {
+						log.Println(err)
+					}
+
 				}
+
 			}
 
 		}
