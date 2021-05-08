@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	//"strconv"
 
 	//"strconv"
 	"strings"
@@ -30,6 +31,9 @@ func downloadImage(url, fileName string) error {
 	defer response.Body.Close()
 
 	file, err := os.Create("c:\\Users\\Alonzo\\Programming\\DisArchive\\DisArchive\\images\\" + fileName)
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	if err != nil {
@@ -66,7 +70,12 @@ func archive(s *discordgo.Session, lastChatID, channelID string) string {
 	//var messageID []int
 	//gets last element in messages unique ID and makes it global
 	log.Println("LAST CHAT ID: " + lastChatID)
-	lastChatID = message[len(message)-1].ID
+	foo := len(message) - 1
+	if foo < 0 {
+		return "Out of Range"
+	}
+	lastChatID = message[foo].ID
+
 	//look for last message in range, and go another 100 back
 
 	for _, content := range message {
@@ -76,17 +85,19 @@ func archive(s *discordgo.Session, lastChatID, channelID string) string {
 		if len(content.Attachments) != 0 {
 
 			for _, foo := range content.Attachments {
+				if foo.Size >= 256 {
+					fileType := strings.SplitAfter(foo.Filename, ".")
+					fileName := foo.ID + "." + fileType[1]
+					log.Println(fileName + foo.URL)
+					//create your own folder for images and place the path below
+					//only creates if file does not exist, file use unique IDs names so it should not make duplicates
+					if _, err := os.Stat("c:\\Users\\Alonzo\\Programming\\DisArchive\\DisArchive\\images\\" + fileName); os.IsNotExist(err) {
 
-				fileType := strings.SplitAfter(foo.Filename, ".")
-				fileName := foo.ID + "." + fileType[1]
-				//create your own folder for images and place the path below
-				//only creates if file does not exist, file use unique IDs names so it should not make duplicates
-				if _, err := os.Stat("c:\\Users\\Alonzo\\Programming\\DisArchive\\DisArchive\\images\\" + fileName); os.IsNotExist(err) {
-
-					log.Println("Creating file " + fileName)
-					err := downloadImage(foo.URL, fileName)
-					if err != nil {
-						log.Println(err)
+						log.Println("Creating file " + fileName)
+						err := downloadImage(foo.URL, fileName)
+						if err != nil {
+							log.Println(err)
+						}
 					}
 
 				}
@@ -104,7 +115,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		medium = 0
 		s.ChannelMessageSend(m.ChannelID, "Hol' up")
 		args := strings.SplitAfter(m.Content, " ")
-		err := archive(s, args[1], args[2])
+		//last chat ID 176595202172125185 images in the 172,000's
+		//searches thru channel that the command was sent in
+		err := archive(s, args[1], m.ChannelID)
 		if err == "" {
 			log.Println(err)
 			log.Println("Error reading chat history")
